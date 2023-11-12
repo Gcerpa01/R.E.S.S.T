@@ -20,9 +20,12 @@
 #include "main.h"
 #include "usart.h"
 #include "gpio.h"
+#include <stdio.h>
+#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#define ADC_BUF_LEN 4096
 
 /* USER CODE END Includes */
 
@@ -44,7 +47,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint16_t adc_buf[ADC_BUF_LEN];
+int rpm_sens[4] = {1,0,1,0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,6 +69,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  char msg[] = "Testing \r\n";
 
   /* USER CODE END 1 */
 
@@ -74,6 +79,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  unsigned long startTime = HAL_GetTick();
 
   /* USER CODE END Init */
 
@@ -95,7 +101,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		unsigned long currentTime = HAL_GetTick();
+		if( (currentTime - startTime) >= 1000){ //minute has passed
+			rpm_sens = rpm_sens / 6000;
+			int l_rpm = rpm_sens[0];
+			int r_rpm = rpm_sens[2];
+			if(l_rpm == r_rpm) HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6, GPIO_PIN_SET); //turn on LED
+			else if(l_rpm != r_rpm)  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET); // turn off LED
+			sprintf(msg,"Left RPM: %d Right RPM: %d \r\n", l_rpm,r_rpm);
+			HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg),HAL_MAX_DELAY);
+			rpm_sens[0] = 1;
+			rpm_sens[1] = 0;
+			rpm_sens[2] = 1;
+			rpm_sens[3] = 0;
+			startTime = HAL_GetTick();
+		}
+
     /* USER CODE END WHILE */
+
+
 
     /* USER CODE BEGIN 3 */
   }
@@ -160,10 +184,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
    */
 
   /*TO BE REPLACED FOR COUNTER LOGIC*/
-  if(GPIO_Pin == GPIO_PIN_6) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_6);
-  else if (GPIO_Pin == GPIO_PIN_7) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_8);
-  else if (GPIO_Pin == GPIO_PIN_12) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_7);
-  else if (GPIO_Pin == GPIO_PIN_13) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_9);
+
+
+  if(GPIO_Pin == GPIO_PIN_6) rpm_sens[0]++;
+  else if (GPIO_Pin == GPIO_PIN_7) rpm_sens[1]++;
+  else if (GPIO_Pin == GPIO_PIN_12) rpm_sens[2]++;
+  else if (GPIO_Pin == GPIO_PIN_13) rpm_sens[3]++;
+
+//  if(GPIO_Pin == GPIO_PIN_6) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_6);
+//  else if (GPIO_Pin == GPIO_PIN_7) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_8);
+//  else if (GPIO_Pin == GPIO_PIN_12) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_7);
+//  else if (GPIO_Pin == GPIO_PIN_13) HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_9);
 }
 
 /* USER CODE END 4 */
