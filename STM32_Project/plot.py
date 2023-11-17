@@ -15,5 +15,6 @@ plt.plot(expected_rpm, hall_effect_out, marker = 'o', linestyle = '-', color = '
 
 plt.xlabel("Expected RPM")
 plt.ylabel("RPM Outputs")
+plt.legend()
 
 plt.show()
