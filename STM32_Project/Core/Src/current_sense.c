@@ -1,25 +1,5 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdio.h>
-#include <string.h>
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -66,8 +46,8 @@ float voltage_input;
 /* USER CODE BEGIN 0 */
 void adc_read(uint16_t read, float current, float voltage){
 	char msg[60];
-	sprintf(msg, "Read Value: %d, Voltage Output: %.4f V, Current Output: %.4f A", read, voltage, current);
-	HAL_UART_Transmit(&huart2, (uint8_t)* msg, strlen(msg), HAL_MAX_DELAY);
+	sprintf(msg, "Read Value: %d, Voltage Output: %.4f V, Current Output: %.4f A \r\n", read, voltage, current);
+	HAL_UART_Transmit(&huart2, msg, strlen(msg), HAL_MAX_DELAY);
 }
 /* USER CODE END 0 */
 
@@ -102,8 +82,8 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  //HAL_USART_INIT(&huart2);
   HAL_ADC_Start(&hadc1);
-  HAL_UART_INIT(&huart2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,12 +91,12 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  HAL_ADC_pollforconversion(&hadc1, 1000);
-	  readVal = HAL_ADC_getvalue(&hadc1);
+	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+	  readVal = HAL_ADC_GetValue(&hadc1);
 	  voltage_input = (float) (readVal * 3.3)/4096;
 	  current_input = voltage_input/0.1;
-	  HAL_Delay(8);
 	  adc_read(readVal, current_input, voltage_input);
+	  HAL_Delay(8);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -207,7 +187,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
