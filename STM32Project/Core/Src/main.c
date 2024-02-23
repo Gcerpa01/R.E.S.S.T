@@ -99,8 +99,56 @@ void printControllerValues() {
 }
 
 ////////////////////////////
+////////////////////////////
+typedef struct{
+	double kp;
+	double ki;
+	double kd;
+
+	double setpoint;
+
+	double prevError;
+	double integral;
+
+	double outputMin;
+	double outputMax;
+}PID_controller;
+
+void PID_init(PID_controller* pid, double kp, double ki, double kd, double max, double min){
+	pid->kp = kp;	//tune these constants after testing
+	pid->ki = ki;
+	pid->kd = kd;
+
+	pid-> outputMin = min;
+	pid-> outputMax = max;
+
+	pid->setpoint = 0;
+	pid->prevError = 0;
+	pid->integral = 0;
+}
 /* USER CODE END 0 */
 
+double PID_Adjust(PID_controller* pid, double speed){
+	double integral;
+	double derivative;
+	double proportional;
+	double error;
+	double new_output;
+
+	error = speed - pid->setpoint;
+	proportional = error * pid->kp;
+
+	pid->integral += error;
+	integral = pid->integral * ki;
+
+	derivative = error - pid->prevError;
+	derivative *= pid->kd;
+
+
+	pid->prevError = error;
+	new_output = derivative + integral + proportional;
+	return new_output;
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -139,10 +187,20 @@ int main(void)
   int duty_cycle3 = 900;
   int duty_cycle4 = 1300;
 
-  __HAL_TIME_SET_COMPARE(&htim1, TIM_CHANNEL1, duty_cycle1);
-  __HAL_TIME_SET_COMPARE(&htim1, TIM_CHANNEL2, duty_cycle2);
-  __HAL_TIME_SET_COMPARE(&htim1, TIM_CHANNEL3, duty_cycle3);
-  __HAL_TIME_SET_COMPARE(&htim1, TIM_CHANNEL4, duty_cycle4);
+  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_3);
+  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_4);
+
+  /*
+   * PID_controller motor1;
+   * PID_controller motor2;
+   * PID_controller motor3;
+   * PID_controller motor4;
+   *
+   */
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -157,6 +215,11 @@ int main(void)
 	*/
 
     /* USER CODE BEGIN 3 */
+	  TIM1->CCR1 = duty_cycle1;	//set duty cycle channel 1 to 50%
+	  TIM1->CCR2 = duty_cycle2;	//set duty cycle channel 2 to 12%
+	  TIM1->CCR3 = duty_cycle3;	//set duty cycle channel 3 to 10%
+	  TIM1->CCR4 = duty_cycle4;	//set duty cycle channel 4 to 8%	printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
+	  /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
