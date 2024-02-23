@@ -142,6 +142,27 @@ void PID_init(PID_controller* pid, double kp, double ki, double kd, double max, 
 }
 /* USER CODE END 0 */
 
+double PID_Adjust(PID_controller* pid, double speed){
+	double integral;
+	double derivative;
+	double proportional;
+	double error;
+	double new_output;
+
+	error = speed - pid->setpoint;
+	proportional = error * pid->kp;
+
+	pid->integral += error;
+	integral = pid->integral * ki;
+
+	derivative = error - pid->prevError;
+	derivative *= pid->kd;
+
+
+	pid->prevError = error;
+	new_output = derivative + integral + proportional;
+	return new_output;
+}
 /**
   * @brief  The application entry point.
   * @retval int
