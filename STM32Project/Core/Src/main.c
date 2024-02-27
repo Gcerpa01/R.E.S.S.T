@@ -69,8 +69,6 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart1;
 TIM_HandleTypeDef htim1;
 
-UART_HandleTypeDef huart2;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -142,27 +140,6 @@ void PID_init(PID_controller* pid, double kp, double ki, double kd, double max, 
 }
 /* USER CODE END 0 */
 
-double PID_Adjust(PID_controller* pid, double speed){
-	double integral;
-	double derivative;
-	double proportional;
-	double error;
-	double new_output;
-
-	error = speed - pid->setpoint;
-	proportional = error * pid->kp;
-
-	pid->integral += error;
-	integral = pid->integral * ki;
-
-	derivative = error - pid->prevError;
-	derivative *= pid->kd;
-
-
-	pid->prevError = error;
-	new_output = derivative + integral + proportional;
-	return new_output;
-}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -218,6 +195,18 @@ int main(void)
   printf("The following Duty Cycle is being sent to all channels: %f\n", get_duty_cycle(throttle_input));
 */
 
+  TIM1 -> CCR1 = duty_cycle1;
+  TIM1 -> CCR2 = duty_cycle1;
+  TIM1 -> CCR3 = duty_cycle1;
+  TIM1 -> CCR3 = duty_cycle1;
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty_cycle1);
+//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty_cycle2);
+//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, duty_cycle3);
+//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, duty_cycle4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -479,11 +468,29 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : USART_TX_Pin */
+  GPIO_InitStruct.Pin = USART_TX_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+  HAL_GPIO_Init(USART_TX_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LD2_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
