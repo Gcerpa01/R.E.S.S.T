@@ -58,6 +58,8 @@ enum STEER CURRENT_STEERING = NEUTRAL;
 UART_HandleTypeDef huart1;
 TIM_HandleTypeDef htim1;
 
+UART_HandleTypeDef huart2;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -158,33 +160,20 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
-  int duty_cycle1 = 1200;
-  int duty_cycle2 = 1100;
-  int duty_cycle3 = 900;
-  int duty_cycle4 = 1300;
-
-  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_1);
-  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_3);
-  HAL_TIM_PWM_START(&htim1, TIM_CHANNEL_4);
-
-  /*
-   * PID_controller motor1;
-   * PID_controller motor2;
-   * PID_controller motor3;
-   * PID_controller motor4;
-   *
-   */
-
+  HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 12);
+  //Formula for calculating CCR/100 * 144 = duty cycle
+  float duty_cycle1 = 7.2; //5% - min
+  float duty_cycle2 = 8.64; //6%
+  float duty_cycle3 = 12.24; //8.5%
+  float duty_cycle4 = 14.4; //10% - max
 
   TIM1 -> CCR1 = duty_cycle1;
-  TIM1 -> CCR2 = duty_cycle1;
-  TIM1 -> CCR3 = duty_cycle1;
-  TIM1 -> CCR3 = duty_cycle1;
+  TIM1 -> CCR2 = duty_cycle2;
+  TIM1 -> CCR3 = duty_cycle3;
+  TIM1 -> CCR4 = duty_cycle4;
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty_cycle1);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty_cycle2);
@@ -338,9 +327,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 143;
+  htim1.Init.Prescaler = 9999;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 9999;
+  htim1.Init.Period = 143;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -470,20 +459,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USART_TX_Pin */
-  GPIO_InitStruct.Pin = USART_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(USART_TX_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
