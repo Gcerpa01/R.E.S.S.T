@@ -69,6 +69,8 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart1;
 TIM_HandleTypeDef htim1;
 
+UART_HandleTypeDef huart2;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -196,12 +198,12 @@ int main(void)
 */
 
   TIM1 -> CCR1 = duty_cycle1;
-  TIM1 -> CCR2 = duty_cycle1;
-  TIM1 -> CCR3 = duty_cycle1;
-  TIM1 -> CCR3 = duty_cycle1;
+  TIM1 -> CCR2 = duty_cycle2;
+  TIM1 -> CCR3 = duty_cycle3;
+  TIM1 -> CCR4 = duty_cycle4;
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty_cycle1);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty_cycle2);
@@ -477,20 +479,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USART_TX_Pin */
-  GPIO_InitStruct.Pin = USART_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(USART_TX_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
