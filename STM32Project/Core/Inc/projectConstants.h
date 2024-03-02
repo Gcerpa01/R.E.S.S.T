@@ -2,8 +2,9 @@
 #define PROJECT_CONSTANTS_H_
 
 #include <main.h>
+
 //Values needed for controlling steering 
-#define JOYSTICK_MIN 1
+#define JOYSTICK_MIN -255
 #define JOYSTICK_MAX 255
 
 #define CCR_FOR_STEERING_MIN 1
