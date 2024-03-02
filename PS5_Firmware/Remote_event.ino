@@ -1,63 +1,42 @@
 #include <ps5Controller.h>
+#include "HardwareSerial.h"
 
+#define txPin  17
+#define rxPin 16
+HardwareSerial stm32Serial(1);
 void setup() {
+  stm32Serial.begin(9600, SERIAL_8N1, rxPin, txPin);
   Serial.begin(9600);
-  ps5.begin("88:03:4c:ef:be:54"); //replace with MAC address of your controller
+  ps5.begin("24:a6:fa:c7:f9:2d"); //replace with MAC address of your controller
   Serial.println("Ready.");
 }
 
 void loop() {
-
   while (ps5.isConnected() == true) {
-    // if (ps5.Right()) Serial.println("Right Button");
-    // if (ps5.Down()) Serial.println("Down Button");
-    // if (ps5.Up()) Serial.println("Up Button");
-    // if (ps5.Left()) Serial.println("Left Button");
+    // Check if the controller buttons are pressed
+    // Omitted for brevity
 
-    if (ps5.Square()) Serial.println("Square Button");
-    if (ps5.Cross()) Serial.println("Cross Button");
-    if (ps5.Circle()) Serial.println("Circle Button");
-    if (ps5.Triangle()) Serial.println("Triangle Button");
+    // Read the values of necessary values
+    int R2Value = ps5.R2Value();
+    int L2Value = ps5.L2Value();
+    int LStickXValue = ps5.LStickX();
+    int Cross = ps5.Cross() ? 0 : 1;
+    int Circle = ps5.Circle() ? 0 : 1;
+    int Square = ps5.Square() ? 0 : 1;
+    int Triangle = ps5.Triangle() ? 0: 1;
+    int PSButton = ps5.PSButton() ? 0 : 1;
 
-    // if (ps5.UpRight()) Serial.println("Up Right");
-    // if (ps5.DownRight()) Serial.println("Down Right");
-    // if (ps5.UpLeft()) Serial.println("Up Left");
-    // if (ps5.DownLeft()) Serial.println("Down Left");
+    // Format the data string
+    char dataString[50];
+    
+    snprintf(dataString, sizeof(dataString), "%d %d %d %d %d %d %d %d", R2Value, L2Value, LStickXValue, Cross, Circle, Square, Triangle, PSButton);
 
-    if (ps5.L1()) Serial.println("L1 Button");
-    if (ps5.R1()) Serial.println("R1 Button");
-
-    // if (ps5.Share()) Serial.println("Share Button");
-    // if (ps5.Options()) Serial.println("Options Button");
-    // if (ps5.L3()) Serial.println("L3 Button");
-    // if (ps5.R3()) Serial.println("R3 Button");
-
-    if (ps5.PSButton()) Serial.println("PS Button");
-    if (ps5.Touchpad()) Serial.println("Touch Pad Button");
-
-    if (ps5.L2()) {
-      Serial.printf("L2 button at %d\n", ps5.L2Value());
-    }
-    if (ps5.R2()) {
-      Serial.printf("R2 button at %d\n", ps5.R2Value());
-    }
-
-    if (ps5.LStickX()) {
-      Serial.printf("Left Stick x at %d\n", ps5.LStickX());
-    }
-    if (ps5.LStickY()) {
-      Serial.printf("Left Stick y at %d\n", ps5.LStickY());
-    }
-    if (ps5.RStickX()) {
-      Serial.printf("Right Stick x at %d\n", ps5.RStickX());
-    }
-    if (ps5.RStickY()) {
-      Serial.printf("Right Stick y at %d\n", ps5.RStickY());
-    }
-
-    Serial.println();
+    // Send the data string over serial
+    stm32Serial.println(dataString);
+    Serial.print("Sent the data: ");
+    Serial.println(dataString);
     // This delay is to make the output more human readable
     // Remove it when you're not trying to see the output
-    delay(300);
   }
+  delay(100);
 }
