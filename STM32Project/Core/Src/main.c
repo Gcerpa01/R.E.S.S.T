@@ -24,6 +24,14 @@
 uint8_t UART1_rxBuffer[12] = {0};
 UART_HandleTypeDef huart1; //used for serial communcation with ESP32
 UART_HandleTypeDef huart2; //used to print to console
+#include "controller_conversion.h"
+#include "motor_control.h"
+#include "traction_control.h"
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+int HALL_EFFECT_SENSORS[4] = {0,0,0,0};
+float RPM_VALUES[4] = {0,0,0,0};
+enum STEER CURRENT_STEERING = NEUTRAL;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
