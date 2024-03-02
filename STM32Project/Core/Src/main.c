@@ -18,9 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "controller_conversion.h"
+#include "motor_control.h"
+#include "traction_control.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+int HALL_EFFECT_SENSORS[4] = {0,0,0,0};
+float RPM_VALUES[4] = {0,0,0,0};
+enum STEER CURRENT_STEERING = NEUTRAL;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
