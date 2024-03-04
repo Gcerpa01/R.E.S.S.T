@@ -27,3 +27,7 @@
     - PB11 = Front Right Wheel
     - PB0 = Back Left Wheel
     - PA5 = Back Right Wheel
+
+## TIM3
+    - Prescaler = 7200 - 1
+    - period = 10000 - 1;

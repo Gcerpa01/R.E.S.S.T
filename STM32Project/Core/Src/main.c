@@ -45,7 +45,7 @@ bool TRACTION_CONTROL = false;
 bool ON_LAND = true;
 int THROTTLE_INPUT = 0;
 int JOYSTICK_INPUT = 0;
-
+int POLE_COUNT = 4;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,6 +65,7 @@ int JOYSTICK_INPUT = 0;
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 TIM_HandleTypeDef htim1;
@@ -82,8 +83,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_TIM1_Init(void);
-static void MX_USART1_UART_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -160,7 +160,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  unsigned long startTime = HAL_GetTick();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -175,8 +174,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_USART1_UART_Init();
-  MX_TIM1_Init();
-  MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
   
@@ -285,10 +283,11 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_TIM1;
+                              |RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_TIM34;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
+  PeriphClkInit.Tim34ClockSelection = RCC_TIM34CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -423,6 +422,50 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 7200-1;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 9999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -527,13 +570,36 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
            the HAL_GPIO_EXTI_Callback could be implemented in the user file
    */
 
-  
   // Counts up on whenever rising edge hall effect occurs
   if(GPIO_Pin == GPIO_PIN_10) rpm_sens[0]++;
   else if (GPIO_Pin == GPIO_PIN_11) rpm_sens[1]++;
   else if (GPIO_Pin == GPIO_PIN_0) rpm_sens[2]++;
   else if (GPIO_Pin == GPIO_PIN_5) rpm_sens[3]++;
 }
+
+
+// Trigger RPM Calculation every second
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(htim -> Instance == TIM3){
+		int w1_rpm = ((rpm_sens[0])/POLE_COUNT) * 60;
+		int w2_rpm = ((rpm_sens[1])/POLE_COUNT) * 60;
+		int w3_rpm = ((rpm_sens[2])/POLE_COUNT) * 60;
+		int w4_rpm = ((rpm_sens[4])/POLE_COUNT) * 60;
+		printf("-----RPM Values-----\n");
+		printf("Front Left Wheel: %f \n", w1_rpm);
+		printf("Front Right Wheel: %f \n", w2_rpm);
+		printf("Back Left Wheel: %f \n", w3_rpm);
+		printf("Back Right Wheel: %f \n", w4_rpm);
+		printf("-----RPM Values----- \n");
+		rpm_sens[0] = 0;
+		rpm_sens[1] = 0;
+		rpm_sens[2] = 0;
+		rpm_sens[3] = 0;
+  }
+}
+
+
 
 /* USER CODE END 4 */
 
