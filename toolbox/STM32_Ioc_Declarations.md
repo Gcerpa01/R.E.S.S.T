@@ -22,3 +22,8 @@
     - Channel3 = PWM Gen CH3 -> PC2
     - Channel4 = PWM Gen CH4 -> PC3
 
+## EXTIS(Used for HALL EFFECT)
+    - PB10  = Front Left Wheel
+    - PB11 = Front Right Wheel
+    - PB0 = Back Left Wheel
+    - PA5 = Back Right Wheel
