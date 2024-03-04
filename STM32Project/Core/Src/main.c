@@ -177,10 +177,15 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+
+  printf("The following duty cycle is being sent to channel 1: %f", (duty_cycle1*100)/144);
+  printf("The following duty cycle is being sent to channel 2: %f", (duty_cycle2*100)/144);
+  printf("The following duty cycle is being sent to channel 3: %f", (duty_cycle3*100)/144);
+  printf("The following duty cycle is being sent to channel 4: %f", (duty_cycle4*100)/144);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty_cycle1);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty_cycle2);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, duty_cycle3);
-//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, duty_cycle4);
+//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, duty_cycle4);duty_cycle2
   /* USER CODE END 2 */
 
   /* Infinite loop */
