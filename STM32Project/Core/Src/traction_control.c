@@ -31,6 +31,7 @@ void determineSlippage(){
                     maxVal = RPM_VALUES[i];
                     WHEEL = i;
                 }
+                printf("Slippage Detected: Wheel %d", i);
             }
         }
     }
