@@ -581,17 +581,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 // Trigger RPM Calculation every second
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  if(htim -> Instance == TIM3){
+  if(htim == &htim3){
 		int w1_rpm = ((rpm_sens[0])/POLE_COUNT) * 60;
 		int w2_rpm = ((rpm_sens[1])/POLE_COUNT) * 60;
 		int w3_rpm = ((rpm_sens[2])/POLE_COUNT) * 60;
 		int w4_rpm = ((rpm_sens[4])/POLE_COUNT) * 60;
-		printf("-----RPM Values-----\n");
-		printf("Front Left Wheel: %f \n", w1_rpm);
-		printf("Front Right Wheel: %f \n", w2_rpm);
-		printf("Back Left Wheel: %f \n", w3_rpm);
-		printf("Back Right Wheel: %f \n", w4_rpm);
-		printf("-----RPM Values----- \n");
+		printf("\r-----RPM Values-----\r\n");
+		printf("Front Left Wheel: %f \r\n", w1_rpm);
+		printf("Front Right Wheel: %f \r\n", w2_rpm);
+		printf("Back Left Wheel: %f \r\n", w3_rpm);
+		printf("Back Right Wheel: %f \r\n", w4_rpm);
+		printf("-----RPM Values----- \r\n");
 		rpm_sens[0] = 0;
 		rpm_sens[1] = 0;
 		rpm_sens[2] = 0;
