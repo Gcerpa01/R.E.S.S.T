@@ -84,6 +84,7 @@ void linearTraction(float currDutyCycle){
 		} else if (target > ACCEL_CCR_FOR_DUTY_CYCLE_MAX){
 			target = ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
 		}
+        target = (target/100) * 144;
         printf("The current CCR for Wheel %d is: %f, changing it to: %f\r\n", pop_val, currDutyCycle, target);
 		send_to_motor(pop_val,target);
 	}
