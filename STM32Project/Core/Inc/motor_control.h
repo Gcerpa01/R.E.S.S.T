@@ -5,5 +5,6 @@
 #include <stdint.h>
 
 void send_input_to_all_motors(float dutyCycle);
+void send_to_motor(float dutyCycle, int motor);
 
 #endif

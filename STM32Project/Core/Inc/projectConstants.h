@@ -2,6 +2,7 @@
 #define PROJECT_CONSTANTS_H_
 
 #include <main.h>
+#include "basic_helpers.h"
 
 //Values needed for controlling steering 
 #define JOYSTICK_MIN -255
@@ -42,26 +43,23 @@ enum STEER {
 
 extern enum STEER CURRENT_STEERING;
 
-//Tracking Slippage
-enum SLIPPAGE {
+//Tracking Slippage and Traction
+enum MOTORS {
     FRONT_RIGHT,
     FRONT_LEFT,
     BACK_RIGHT,
     BACK_LEFT
 };
-extern enum SLIPPAGE WHEEL;
+extern enum MOTORS WHEEL;
 
 //MISC
 #define MAX_RPM_VALUE 1000000
 #define MIN_RPM_VALUE -1000000
 
-typedef struct 
-{
-    int a;
-    int b;
-} tuple;
-
 extern tuple INSIDE_WHEELS;
 extern tuple OUTSIDE_WHEELS;
+
+extern Stack *WHEELS_WITH_TRACTION;
+extern Stack *WHEELS_WITHOUT_TRACTION;
 
 #endif
