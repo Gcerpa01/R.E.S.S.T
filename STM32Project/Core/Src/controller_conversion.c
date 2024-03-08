@@ -55,3 +55,7 @@ void determine_steering_direction(float calculatedValue){
     }
     else CURRENT_STEERING = NEUTRAL;
 }
+
+float get_duty_cycle(float ccrVal){
+    return (ccrVal/144) * 100;
+}
