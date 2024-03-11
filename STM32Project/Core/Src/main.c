@@ -18,13 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-<<<<<<< HEAD
-#include "controller_conversion.h"
-#include "motor_control.h"
-#include "traction_control.h"
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-=======
 #include <stdio.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -36,7 +29,6 @@ UART_HandleTypeDef huart2; //used to print to console
 #include "traction_control.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
->>>>>>> 78eba411743ede4e7625d965d6f28b9df964bafe
 int HALL_EFFECT_SENSORS[4] = {0,0,0,0};
 float RPM_VALUES[4] = {0,0,0,0};
 enum STEER CURRENT_STEERING = NEUTRAL;

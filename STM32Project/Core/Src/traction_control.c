@@ -1,27 +1,20 @@
 #include "traction_control.h"
-<<<<<<< HEAD
-//Calculate the RPM for each wheel and save it in memory
-=======
 #include "motor_control.h"
 
 //Calculate the RPM for each wheel and save it in memory
 /// - Parameters:
 ///   
 ///   
->>>>>>> 78eba411743ede4e7625d965d6f28b9df964bafe
 void calculateRPM(){
     for(size_t i = 0; i < sizeof(HALL_EFFECT_SENSORS)/sizeof(HALL_EFFECT_SENSORS[0]); i++){
         RPM_VALUES[i] = (HALL_EFFECT_SENSORS[i] / POLES) * 60;
     }
 }
 
-<<<<<<< HEAD
-=======
 /// Calculates the Average RPM of the remaining 3 wheels
 /// - Parameters:
 ///   - current: the wheel to not include in the average
 ///   
->>>>>>> 78eba411743ede4e7625d965d6f28b9df964bafe
 float calculateAverageRPM(size_t current){
     float temp = 0;
     for(size_t j = 0; j < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); j++){
@@ -31,14 +24,11 @@ float calculateAverageRPM(size_t current){
     return temp/(sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]) - 1);
 }
 
-<<<<<<< HEAD
-=======
 
 /// Determines which wheels are slipping and which wheels have traction
 /// - Parameters:
 ///   
 ///   
->>>>>>> 78eba411743ede4e7625d965d6f28b9df964bafe
 void determineSlippage(){
     if(CURRENT_STEERING == NEUTRAL){
         float maxVal = MIN_RPM_VALUE;
@@ -49,25 +39,12 @@ void determineSlippage(){
             float threshMax = averageRPM * (1 + LINEAR_TRACTION_THRESHOLD);
 
             //Check if its above or below the threshold
-<<<<<<< HEAD
-            if((RPM_VALUES[i] > threshMax || RPM_VALUES[i] < threshMin)){
-=======
             if(RPM_VALUES[i] >= threshMax){
->>>>>>> 78eba411743ede4e7625d965d6f28b9df964bafe
                 //Prioritize the wheel with the worst traction
                 if(RPM_VALUES[i] > maxVal){
                     maxVal = RPM_VALUES[i];
                     WHEEL = i;
                 }
-<<<<<<< HEAD
-                printf("Slippage Detected: Wheel %d", i);
-            }
-        }
-    }
-}
-
-
-=======
                 printf("Slippage Detected: Wheel %d\r\n", i);
                 push(WHEELS_WITHOUT_TRACTION,i);
             }
@@ -112,4 +89,3 @@ void linearTraction(float currDutyCycle){
 		send_to_motor(pop_val,target);
 	}
 }
->>>>>>> 78eba411743ede4e7625d965d6f28b9df964bafe
