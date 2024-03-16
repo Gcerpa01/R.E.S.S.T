@@ -23,16 +23,19 @@
 #include "traction_control.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-uint8_t UART1_rxBuffer[12] = {0};
+uint8_t UART1_rxBuffer[30] = {0};
 UART_HandleTypeDef huart1; //used for serial communcation with ESP32
 UART_HandleTypeDef huart2; //used to print to console
 #include "controller_conversion.h"
 #include "motor_control.h"
 #include "traction_control.h"
+#include "projectConstants.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 int HALL_EFFECT_SENSORS[4] = {0,0,0,0};
 float RPM_VALUES[4] = {0,0,0,0};
+int CONTROLLER_VALUES[8] = {0};
 enum STEER CURRENT_STEERING = NEUTRAL;
 /* USER CODE END Includes */
 
@@ -87,6 +90,11 @@ void printBuffer(uint8_t* buffer, uint32_t bufferSize)
 {
     HAL_UART_Transmit(&huart2, buffer, bufferSize, HAL_MAX_DELAY);
 }
+
+void printControllerValues() {
+    printf("Right Throttle: %d, Left Throttle: %d:, Joystick: %d, Cross: %d, Circle: %d, Square: %d, Triangle:%d, PS: %d\n", ACC_THROTTLE, BRAKE_THROTTLE, JOYSTICK, CROSS, CIRCLE, SQUARE, TRIANGLE, PS);
+}
+
 ////////////////////////////
 /* USER CODE END 0 */
 
@@ -121,7 +129,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 12);
+  HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,7 +137,12 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
+
+	/* HELPFUL PRINT STATEMENTS
+	  printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
+	  printControllerValues();
+	*/
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -138,9 +151,22 @@ int main(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    HAL_UART_Transmit(&huart1, UART1_rxBuffer, 12, 100);
-    HAL_UART_Receive_IT(&huart1, UART1_rxBuffer, 12);
+    HAL_UART_Transmit(&huart1, UART1_rxBuffer, 30, 100);
+    HAL_UART_Receive_IT(&huart1, UART1_rxBuffer, 30);
+
+    size_t i = 0;
+    char* token = strtok((char*)UART1_rxBuffer, ":");
+    while (token != NULL && i < 8) {
+        if (*token == '\0') {
+            break; // Exit the loop if null terminator is encountered
+        }
+        CONTROLLER_VALUES[i] = atoi(token); // Convert token to integer and assign to CONTROLLER_VALUES
+        token = strtok(NULL, ":"); // Move to the next token
+        i++;
+    }
+
 }
+
 
 /**
   * @brief System Clock Configuration
