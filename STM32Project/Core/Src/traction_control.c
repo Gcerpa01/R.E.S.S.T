@@ -35,7 +35,7 @@ void determineSlippage(){
         //Calculate each wheels RPM to the avergae of all the others
         for(size_t i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
             float averageRPM = calculateAverageRPM(i);
-            float threshMin = averageRPM * (1 - LINEAR_TRACTION_THRESHOLD);
+            float threshMin = averageRPM * (LINEAR_TRACTION_THRESHOLD);
             float threshMax = averageRPM * (1 + LINEAR_TRACTION_THRESHOLD);
 
             //Check if its above or below the threshold
