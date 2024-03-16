@@ -6,10 +6,10 @@
 /// - Parameters:
 ///   - controllerInput: the value received from the controller
 ///   - returns: A float value to be used as to control the motors
-float accel_map(uint8_t controllerInput){
-    float newCCR = (float)(controllerInput - ACCEL_TRIGGER_MIN) * 
-                    ((ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN) / 
-                    (ACCEL_TRIGGER_MAX - ACCEL_TRIGGER_MIN)) + ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
+int accel_map(int controllerInput) {
+    int newCCR = (int)(((float)(controllerInput - ACCEL_TRIGGER_MIN) / 
+                    (float)(ACCEL_TRIGGER_MAX - ACCEL_TRIGGER_MIN)) * 
+                    (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN)) + ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
     return newCCR;
 }
 
@@ -18,9 +18,9 @@ float accel_map(uint8_t controllerInput){
 /// - Parameters:
 ///   - controllerInput: the value received from the controller
 ///   - returns: A float value to be used as to control the motors
-float steer_map(uint8_t controllerInput){
-    float newCCR = (float)(controllerInput - JOYSTICK_MIN)*
-                    ((CCR_FOR_STEERING_MAX - CCR_FOR_STEERING_MIN) / 
+int steer_map(int controllerInput){
+    int newCCR = (int)(((float)(controllerInput - JOYSTICK_MIN) /
+                    (float)(CCR_FOR_STEERING_MAX - CCR_FOR_STEERING_MIN))*
                     (JOYSTICK_MAX - JOYSTICK_MIN)) + CCR_FOR_STEERING_MIN;
     return newCCR;
 }
@@ -30,13 +30,13 @@ float steer_map(uint8_t controllerInput){
 /// - Parameters:
 ///   - controllerInput: the value received from the controller
 ///   - returns: A float value to be used as to control the motors
-float brake_map(uint8_t controllerInput){
-    float newCCR = BRAKING_CCR_FOR_DUTY_CYCLE_MAX - (float)(controllerInput - BRAKE_TRIGGER_MIN) * 
-                    ((BRAKING_CCR_FOR_DUTY_CYCLE_MAX - BRAKING_CCR_FOR_DUTY_CYCLE_MIN) / 
-                    (BRAKE_TRIGGER_MAX - BRAKE_TRIGGER_MIN));
-    return newCCR;
-}
+int brake_map(int controllerInput) {
+    float newCCR = (float)(BRAKING_CCR_FOR_DUTY_CYCLE_MAX - BRAKING_CCR_FOR_DUTY_CYCLE_MIN) * 
+                   ((float)(BRAKE_TRIGGER_MAX - controllerInput) / 
+                   (float)(BRAKE_TRIGGER_MAX - BRAKE_TRIGGER_MIN)) + BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
 
+    return (int)newCCR;
+}
 
 /// Determines which way the user is steering the vehicle
 /// - Parameters:

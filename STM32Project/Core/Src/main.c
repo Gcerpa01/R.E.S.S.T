@@ -162,26 +162,25 @@ int main(void)
   MX_TIM1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 12);
+  HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
   //Formula for calculating CCR/100 * 144 = duty cycle
-  float duty_cycle1 = 7.2; //5% - min
-  float duty_cycle2 = 8.64; //6%
-  float duty_cycle3 = 12.24; //8.5%
-  float duty_cycle4 = 14.4; //10% - max
+  
+  //Initialize all to neutral
+  TIM1 -> CCR1 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR2 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR3 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR4 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
 
-  TIM1 -> CCR1 = duty_cycle1;
-  TIM1 -> CCR2 = duty_cycle2;
-  TIM1 -> CCR3 = duty_cycle3;
-  TIM1 -> CCR4 = duty_cycle4;
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 
-  printf("The following duty cycle is being sent to channel 1: %f", (duty_cycle1*100)/144);
-  printf("The following duty cycle is being sent to channel 2: %f", (duty_cycle2*100)/144);
-  printf("The following duty cycle is being sent to channel 3: %f", (duty_cycle3*100)/144);
-  printf("The following duty cycle is being sent to channel 4: %f", (duty_cycle4*100)/144);
+//  printf("The following duty cycle is being sent to channel 1: %f", (duty_cycle1*100)/144);
+//  printf("The following duty cycle is being sent to channel 2: %f", (duty_cycle2*100)/144);
+//  printf("The following duty cycle is being sent to channel 3: %f", (duty_cycle3*100)/144);
+//  printf("The following duty cycle is being sent to channel 4: %f", (duty_cycle4*100)/144);
+
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty_cycle1);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty_cycle2);
 //  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, duty_cycle3);
@@ -193,17 +192,42 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    int throttle_input = 0;
 	/* HELPFUL PRINT STATEMENTS
 	  printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
 	  printControllerValues();
 	*/
-
+    if (BRAKE_THROTTLE != 0) {
+      throttle_input = brake_map(BRAKE_THROTTLE);
+      send_input_to_all_motors(throttle_input);
+    }
+    else if (!CROSS) {
+    	throttle_input = 110;
+    	send_input_to_all_motors(110);
+    }
     /* USER CODE BEGIN 3 */
-	  TIM1->CCR1 = duty_cycle1;	//set duty cycle channel 1 to 50%
-	  TIM1->CCR2 = duty_cycle2;	//set duty cycle channel 2 to 12%
-	  TIM1->CCR3 = duty_cycle3;	//set duty cycle channel 3 to 10%
-	  TIM1->CCR4 = duty_cycle4;	//set duty cycle channel 4 to 8%	printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
+    else if (!SQUARE){
+      throttle_input = BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
+      send_input_to_all_motors(BRAKING_CCR_FOR_DUTY_CYCLE_MIN);
+    }
+    else if(!TRIANGLE){
+      throttle_input = ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
+      send_input_to_all_motors(ACCEL_CCR_FOR_DUTY_CYCLE_MIN);
+    }
+    else if(!CIRCLE){
+    	throttle_input = ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
+    	send_input_to_all_motors(ACCEL_CCR_FOR_DUTY_CYCLE_MAX);
+    }
+    else{
+      throttle_input = accel_map(ACC_THROTTLE);
+      send_input_to_all_motors(throttle_input);
+    }
+//    printControllerValues();
+    printf("The following CCR is being sent to all channels: %d\n", throttle_input);
+	  // TIM1->CCR1 = duty_cycle1;	//set duty cycle channel 1 to 50%
+	  // TIM1->CCR2 = duty_cycle2;	//set duty cycle channel 2 to 12%
+	  // TIM1->CCR3 = duty_cycle3;	//set duty cycle channel 3 to 10%
+	  // TIM1->CCR4 = duty_cycle4;	//set duty cycle channel 4 to 8%	printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
 	  /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -212,8 +236,21 @@ int main(void)
 /// DO NOT DELETE NEEDED FOR RX ////
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    HAL_UART_Transmit(&huart1, UART1_rxBuffer, 12, 100);
-    HAL_UART_Receive_IT(&huart1, UART1_rxBuffer, 12);
+  HAL_UART_Transmit(&huart1, UART1_rxBuffer, 30, 100);
+  HAL_UART_Receive_IT(&huart1, UART1_rxBuffer, 30);
+
+  size_t i = 0;
+  char* token = strtok((char*)UART1_rxBuffer, ":");
+
+  while (token != NULL && i < 8) {
+    if (*token == '\0') {
+      break; // Exit the loop if null terminator is encountered
+      }
+    CONTROLLER_VALUES[i] = atoi(token); // Convert token to integer and assign to CONTROLLER_VALUES
+    token = strtok(NULL, ":"); // Move to the next token
+    i++;
+  }
+
 }
 
 /**
@@ -321,9 +358,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 9999;
+  htim1.Init.Prescaler = 999;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 143;
+  htim1.Init.Period = 1439;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;

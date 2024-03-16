@@ -4,7 +4,7 @@
 #include "projectConstants.h"
 #include <stdint.h>
 
-void send_input_to_all_motors(float dutyCycle);
-void send_to_motor(float dutyCycle, int motor);
+void send_input_to_all_motors(int dutyCycle);
+void send_to_motor(int dutyCycle, int motor);
 
 #endif
