@@ -45,7 +45,7 @@ bool TRACTION_CONTROL = false;
 bool ON_LAND = true;
 int THROTTLE_INPUT = 0;
 int JOYSTICK_INPUT = 0;
-int POLE_COUNT = 4;
+int POLE_COUNT = 8;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -582,10 +582,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim == &htim3){
-		int w1_rpm = ((rpm_sens[0])/POLE_COUNT) * 60;
-		int w2_rpm = ((rpm_sens[1])/POLE_COUNT) * 60;
-		int w3_rpm = ((rpm_sens[2])/POLE_COUNT) * 60;
-		int w4_rpm = ((rpm_sens[4])/POLE_COUNT) * 60;
+		int w1_rpm = ((rpm_sens[0])* POLE_COUNT) * 60;
+		int w2_rpm = ((rpm_sens[1])* POLE_COUNT) * 60;
+		int w3_rpm = ((rpm_sens[2])* POLE_COUNT) * 60;
+		int w4_rpm = ((rpm_sens[4])* POLE_COUNT) * 60;
 		printf("\r-----RPM Values-----\r\n");
 		printf("Front Left Wheel: %f \r\n", w1_rpm);
 		printf("Front Right Wheel: %f \r\n", w2_rpm);
