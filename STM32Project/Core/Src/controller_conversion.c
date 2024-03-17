@@ -1,11 +1,13 @@
 #include "controller_conversion.h"
-#include "basic_helpers.h"
 
-/// Maps the values given from the controller to be within a given boundary for proper
-/// Duty Cycle calibration
-/// - Parameters:
-///   - controllerInput: the value received from the controller
-///   - returns: A float value to be used as to control the motors
+
+/**
+ * @abstract: Maps the values given from the controller to be within a given boundary for
+ *            proper Duty Cycle calibration
+ * @param controllerInput: the value received from the controller
+ * @returns: A float value to be used as to control the motors
+ *  
+ */
 int accel_map(int controllerInput) {
     int newCCR = (int)(((float)(controllerInput - ACCEL_TRIGGER_MIN) / 
                     (float)(ACCEL_TRIGGER_MAX - ACCEL_TRIGGER_MIN)) * 
@@ -13,11 +15,13 @@ int accel_map(int controllerInput) {
     return newCCR;
 }
 
-/// Maps the values given from the controller to be within a given boundary for proper
-/// Duty Cycle calibration
-/// - Parameters:
-///   - controllerInput: the value received from the controller
-///   - returns: A float value to be used as to control the motors
+/**
+ * @abstract: Maps the values given from the controller to be within a given boundary for
+ *            proper Duty Cycle calibration
+ * @param controllerInput: the value received from the controller
+ * @returns: A float value to be used as to control the servo motors
+ *  
+ */
 int steer_map(int controllerInput){
     int newCCR = (int)(((float)(controllerInput - JOYSTICK_MIN) /
                     (float)(CCR_FOR_STEERING_MAX - CCR_FOR_STEERING_MIN))*
@@ -25,11 +29,13 @@ int steer_map(int controllerInput){
     return newCCR;
 }
 
-/// Maps the values given from the controller to be within a given boundary for proper
-/// Duty Cycle calibration
-/// - Parameters:
-///   - controllerInput: the value received from the controller
-///   - returns: A float value to be used as to control the motors
+/**
+ * @abstract: Maps the values given from the controller to be within a given boundary for
+ *            proper Duty Cycle calibration
+ * @param controllerInput: the value received from the controller
+ * @returns: A float value to be used as to control the motors
+ *  
+ */
 int brake_map(int controllerInput) {
     float newCCR = (float)(BRAKING_CCR_FOR_DUTY_CYCLE_MAX - BRAKING_CCR_FOR_DUTY_CYCLE_MIN) * 
                    ((float)(BRAKE_TRIGGER_MAX - controllerInput) / 
@@ -38,9 +44,11 @@ int brake_map(int controllerInput) {
     return (int)newCCR;
 }
 
-/// Determines which way the user is steering the vehicle
-/// - Parameters:
-///   - calculatedValue: the value received from the controller
+/**
+ * @abstract: Determines which way the user is steering the vehicle
+ * @param calculatedValue: the value received from the controller
+ *  
+ */
 void determine_steering_direction(float calculatedValue){
     float baseline = (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN) / 2;
     if (calculatedValue < baseline - baseline*STEERING_THRESHOLD){
@@ -54,8 +62,4 @@ void determine_steering_direction(float calculatedValue){
         OUTSIDE_WHEELS= make_tuple(FRONT_LEFT, BACK_RIGHT);
     }
     else CURRENT_STEERING = NEUTRAL;
-}
-
-float get_duty_cycle(float ccrVal){
-    return (ccrVal/144) * 100;
 }
