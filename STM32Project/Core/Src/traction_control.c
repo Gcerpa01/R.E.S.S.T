@@ -1,20 +1,45 @@
 #include "traction_control.h"
-#include "motor_control.h"
 
-//Calculate the RPM for each wheel and save it in memory
-/// - Parameters:
-///   
-///   
+// Define the global variables
+Stack *WHEELS_WITH_TRACTION;
+Stack *WHEELS_WITHOUT_TRACTION;
+
+/**
+ * @abstract: Determines the Duty Cycle based on CCR value
+ * @returns: the Duty Cycle being sent
+ *  
+ */
+float get_duty_cycle(int passedCCR){
+    return passedCCR * 100.0 / 1440.0;
+}
+
+/**
+ * @abstract: Creates the global variables necessary
+ * 
+ * 
+ */
+void initialize_traction_control() {
+    WHEELS_WITH_TRACTION = create_stack(4);
+    WHEELS_WITHOUT_TRACTION = create_stack(4);
+}
+
+/**
+ * @abstract: Calculates the RPM for each wheel and save it in memory
+ * 
+ * 
+ */
 void calculateRPM(){
     for(size_t i = 0; i < sizeof(HALL_EFFECT_SENSORS)/sizeof(HALL_EFFECT_SENSORS[0]); i++){
         RPM_VALUES[i] = (HALL_EFFECT_SENSORS[i] / POLES) * 60;
     }
 }
 
-/// Calculates the Average RPM of the remaining 3 wheels
-/// - Parameters:
-///   - current: the wheel to not include in the average
-///   
+
+/**
+ * @abstract: Calculates the Average RPM of the remaining 3 wheels
+ * @param current: the wheel to not include in the RPM average 
+ * 
+ */
 float calculateAverageRPM(size_t current){
     float temp = 0;
     for(size_t j = 0; j < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); j++){
@@ -25,41 +50,45 @@ float calculateAverageRPM(size_t current){
 }
 
 
-/// Determines which wheels are slipping and which wheels have traction
-/// - Parameters:
-///   
-///   
+/**
+ * @abstract: Determines which wheels are slipping and which wheels have traction
+ * 
+ * 
+ */
 void determineSlippage(){
     if(CURRENT_STEERING == NEUTRAL){
         float maxVal = MIN_RPM_VALUE;
-        //Calculate each wheels RPM to the avergae of all the others
+        //Compare each wheels RPM to the average of all the others
         for(size_t i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
             float averageRPM = calculateAverageRPM(i);
-            float threshMin = averageRPM * (1 - LINEAR_TRACTION_THRESHOLD);
+//            printf("The averageRPM for all other wheels is: %.2f, Wheel[i] RPM is: %.2f\r\n",averageRPM, RPM_VALUES[i]);
             float threshMax = averageRPM * (1 + LINEAR_TRACTION_THRESHOLD);
-
+//            printf("The threshold max is: %.2f\r\n", threshMax);
             //Check if its above or below the threshold
             if(RPM_VALUES[i] >= threshMax){
-                //Prioritize the wheel with the worst traction
+                //Track the wheel with the worst traction
                 if(RPM_VALUES[i] > maxVal){
                     maxVal = RPM_VALUES[i];
                     WHEEL = i;
                 }
-                printf("Slippage Detected: Wheel %d\r\n", i);
+                // printf("Slippage Detected: Wheel %d\r\n", i);
                 push(WHEELS_WITHOUT_TRACTION,i);
             }
             else{ push(WHEELS_WITH_TRACTION,i); }
         }
-        printf("Wheel with the worst slippage is: %d\r\n", WHEEL);
+        // printf("Wheel with the worst slippage is: %d\r\n", WHEEL);
+        linearTraction(THROTTLE_INPUT);
     }   
 }
 
 
-/// Calculates and sends a new duty cycle to the wheel slipping
-/// - Parameters:
-///   - currDutyCycle: the current CCR value being sent to the motor
-///   
-void linearTraction(float currDutyCycle){
+
+/**
+ * @abstract: Calculates and sends a new duty cycle to the wheel slipping
+ * @param currCCR: the current CCR value being sent to the motor
+ * 
+ */
+void linearTraction(int currCCR){
 	//get average rpm of the wheels with traction
 	int pop_val = 0;
 	float average = 0;
@@ -77,15 +106,13 @@ void linearTraction(float currDutyCycle){
         //Calculate difference in rpm 
 		float reduction = RPM_VALUES[pop_val] - average;
         //Calculate target based on current input 
-		float target = currDutyCycle - (reduction/RPM_VALUES[pop_val]) * (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN);
+		int target = currCCR - (reduction/RPM_VALUES[pop_val]) * (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN);
         //Stay within boundaries
-		if(target < ACCEL_CCR_FOR_DUTY_CYCLE_MIN){
-			target = ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
-		} else if (target > ACCEL_CCR_FOR_DUTY_CYCLE_MAX){
-			target = ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
-		}
-        target = (target/100) * 144;
-        printf("The current CCR for Wheel %d is: %f, changing it to: %f\r\n", pop_val, currDutyCycle, target);
+        target = (target < ACCEL_CCR_FOR_DUTY_CYCLE_MIN) ? ACCEL_CCR_FOR_DUTY_CYCLE_MIN : target;
+        target = (target > ACCEL_CCR_FOR_DUTY_CYCLE_MAX) ? ACCEL_CCR_FOR_DUTY_CYCLE_MAX : target;
+
+        // printf("The current CCR for Wheel %d is: %d, changing it to: %d\r\n", pop_val, currCCR, target);
+        // printf("The current Duty Cycle for Wheel %d is: %.2f, changing it to: %.2f\r\n", pop_val, get_duty_cycle(currCCR), get_duty_cycle(target));
 		send_to_motor(pop_val,target);
 	}
 }

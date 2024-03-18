@@ -1,8 +1,9 @@
 #ifndef CONTROLLER_CONVERSION_H_
 #define CONTROLLER_CONVERSION_H_
 
-#include "projectConstants.h"
 #include <stdint.h>
+#include "projectConstants.h"
+#include "basic_helpers.h"
 
 int accel_map(int controllerInput);
 int steer_map(int controllerInput);
