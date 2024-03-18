@@ -101,7 +101,7 @@ void printControllerValues() {
 ////////////////////////////
 ////////////////////////////
 
-
+/*
 typedef struct{
 	double kp;
 	double ki;
@@ -127,7 +127,7 @@ void PID_init(PID_controller* pid, double kp, double ki, double kd, double max, 
 	pid->setpoint = 0;
 	pid->prevError = 0;
 	pid->integral = 0;
-}
+}*/
 /* USER CODE END 0 */
 
 /**
