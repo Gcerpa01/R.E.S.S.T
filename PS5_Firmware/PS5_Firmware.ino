@@ -24,12 +24,12 @@ void loop() {
     int Circle = ps5.Circle() ? 0 : 1;
     int Square = ps5.Square() ? 0 : 1;
     int Triangle = ps5.Triangle() ? 0 : 1;
-    int PSButton = ps5.PSButton() ? 0 : 1;
+    int L1Value = ps5.L1() ? 0 : 1;
 
     // Format the data string
     char dataString[30];
 
-    int formattedLength = snprintf(dataString, sizeof(dataString), "%d:%d:%d:%d:%d:%d:%d:%d", R2Value, L2Value, LStickXValue, Cross, Circle, Square, Triangle, PSButton);
+    int formattedLength = snprintf(dataString, sizeof(dataString), "%d:%d:%d:%d:%d:%d:%d:%d", R2Value, L2Value, LStickXValue, Cross, Circle, Square, Triangle, L1Value);
 
     // Fill remaining characters with ':'
     for (int i = formattedLength; i < sizeof(dataString) - 1; i++) {

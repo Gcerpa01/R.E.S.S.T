@@ -21,11 +21,7 @@
 #include "controller_conversion.h"
 #include "motor_control.h"
 #include "traction_control.h"
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-uint8_t UART1_rxBuffer[30] = {0};
-UART_HandleTypeDef huart1; //used for serial communcation with ESP32
-UART_HandleTypeDef huart2; //used to print to console
+#include "automatic_transmission.h"
 #include "controller_conversion.h"
 #include "motor_control.h"
 #include "traction_control.h"
@@ -33,10 +29,23 @@ UART_HandleTypeDef huart2; //used to print to console
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+uint8_t UART1_rxBuffer[30] = {0};
+UART_HandleTypeDef huart1; //used for serial communcation with ESP32
+UART_HandleTypeDef huart2; //used to print to console
+
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 int HALL_EFFECT_SENSORS[4] = {0,0,0,0};
 float RPM_VALUES[4] = {0,0,0,0};
-int CONTROLLER_VALUES[8] = {0};
+int CONTROLLER_VALUES[8] = {0, 0, 0, 1, 1, 1, 1, 1};
 enum STEER CURRENT_STEERING = NEUTRAL;
+enum MOTORS WHEEL = NONE;
+bool TRACTION_CONTROL = false;
+bool ON_LAND = true;
+int THROTTLE_INPUT = 0;
+int JOYSTICK_INPUT = 0;
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,7 +104,7 @@ void printBuffer(uint8_t* buffer, uint32_t bufferSize)
 }
 
 void printControllerValues() {
-    printf("Right Throttle: %d, Left Throttle: %d:, Joystick: %d, Cross: %d, Circle: %d, Square: %d, Triangle:%d, PS: %d\n", ACC_THROTTLE, BRAKE_THROTTLE, JOYSTICK, CROSS, CIRCLE, SQUARE, TRIANGLE, PS);
+    printf("Right Throttle: %d, Left Throttle: %d:, Joystick: %d, Cross: %d, Circle: %d, Square: %d, Triangle:%d, L1: %d\n", ACC_THROTTLE, BRAKE_THROTTLE, JOYSTICK, CROSS, CIRCLE, SQUARE, TRIANGLE, L1);
 }
 
 ////////////////////////////
@@ -163,7 +172,6 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
-  //Formula for calculating CCR/100 * 144 = duty cycle
   
   //Initialize all to neutral
   TIM1 -> CCR1 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
@@ -176,62 +184,26 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 
-//  printf("The following duty cycle is being sent to channel 1: %f", (duty_cycle1*100)/144);
-//  printf("The following duty cycle is being sent to channel 2: %f", (duty_cycle2*100)/144);
-//  printf("The following duty cycle is being sent to channel 3: %f", (duty_cycle3*100)/144);
-//  printf("The following duty cycle is being sent to channel 4: %f", (duty_cycle4*100)/144);
 
-//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty_cycle1);
-//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty_cycle2);
-//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, duty_cycle3);
-//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, duty_cycle4);duty_cycle2
+  initialize_traction_control();
+/* HELPFUL PRINT STATEMENTS
+  printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
+  printControllerValues();
+  printf("The following CCR is being sent to all channels: %d\n", throttle_input);
+  printf("The following Duty Cycle is being sent to all channels: %f\n", get_duty_cycle(throttle_input));
+*/
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-    int throttle_input = 0;
-	/* HELPFUL PRINT STATEMENTS
-	  printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
-	  printControllerValues();
-	*/
-    if (BRAKE_THROTTLE != 0) {
-      throttle_input = brake_map(BRAKE_THROTTLE);
-      send_input_to_all_motors(throttle_input);
-    }
-    else if (!CROSS) {
-    	throttle_input = 110;
-    	send_input_to_all_motors(110);
-    }
-    /* USER CODE BEGIN 3 */
-    else if (!SQUARE){
-      throttle_input = BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
-      send_input_to_all_motors(BRAKING_CCR_FOR_DUTY_CYCLE_MIN);
-    }
-    else if(!TRIANGLE){
-      throttle_input = ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
-      send_input_to_all_motors(ACCEL_CCR_FOR_DUTY_CYCLE_MIN);
-    }
-    else if(!CIRCLE){
-    	throttle_input = ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
-    	send_input_to_all_motors(ACCEL_CCR_FOR_DUTY_CYCLE_MAX);
-    }
-    else{
-      throttle_input = accel_map(ACC_THROTTLE);
-      send_input_to_all_motors(throttle_input);
-    }
-//    printControllerValues();
-    printf("The following CCR is being sent to all channels: %d\n", throttle_input);
-	  // TIM1->CCR1 = duty_cycle1;	//set duty cycle channel 1 to 50%
-	  // TIM1->CCR2 = duty_cycle2;	//set duty cycle channel 2 to 12%
-	  // TIM1->CCR3 = duty_cycle3;	//set duty cycle channel 3 to 10%
-	  // TIM1->CCR4 = duty_cycle4;	//set duty cycle channel 4 to 8%	printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
-	  /* USER CODE BEGIN 3 */
+    driver();
   }
-  /* USER CODE END 3 */
+
 }
+/* USER CODE END WHILE */
 
 /// DO NOT DELETE NEEDED FOR RX ////
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
