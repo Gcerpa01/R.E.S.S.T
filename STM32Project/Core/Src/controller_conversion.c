@@ -53,13 +53,13 @@ void determine_steering_direction(float calculatedValue){
     float baseline = (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN) / 2;
     if (calculatedValue < baseline - baseline*STEERING_THRESHOLD){
         CURRENT_STEERING = LEFT;
-        INSIDE_WHEELS = make_tuple(FRONT_LEFT, BACK_RIGHT);
-        OUTSIDE_WHEELS = make_tuple(FRONT_RIGHT, BACK_LEFT);
+        INSIDE_WHEELS = make_tuple(LAND_CONTROLLERS[1], LAND_CONTROLLERS[2]);
+        OUTSIDE_WHEELS = make_tuple(LAND_CONTROLLERS[0], LAND_CONTROLLERS[3]);
     }
     else if (calculatedValue > (baseline + baseline*STEERING_THRESHOLD)){
         CURRENT_STEERING = RIGHT;
-        INSIDE_WHEELS = make_tuple(FRONT_RIGHT, BACK_LEFT);
-        OUTSIDE_WHEELS= make_tuple(FRONT_LEFT, BACK_RIGHT);
+        INSIDE_WHEELS = make_tuple(LAND_CONTROLLERS[0], LAND_CONTROLLERS[3]);
+        OUTSIDE_WHEELS= make_tuple(LAND_CONTROLLERS[1], LAND_CONTROLLERS[2]);
     }
     else CURRENT_STEERING = NEUTRAL;
 }

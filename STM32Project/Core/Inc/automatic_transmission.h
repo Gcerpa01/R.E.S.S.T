@@ -2,6 +2,7 @@
 #define AUTOMATIC_TRANSMISSION_H_
 
 #include "traction_control.h"
+#include "projectConstants.h"
 
 void transmission_shift();
 void driver();

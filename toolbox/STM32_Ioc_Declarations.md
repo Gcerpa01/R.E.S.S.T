@@ -8,8 +8,8 @@
 ## UART 1
     - Mode = Asynchronous
     - NVIC Tab -> Enable global interrupt
-    - Rx Pin = PA10
-    - Tx Pin = PA9
+    - Rx Pin = PA10 -> D2
+    - Tx Pin = PA9 -> D8
 
 ## UART 2
     - Default
@@ -17,16 +17,16 @@
 
 ## TIM1
     - Clock Source = Internal CLOCK
-    - Channel1 = PWM Gen CH1 -> PC0
-    - Channel2 = PWM Gen CH2 -> PC1
-    - Channel3 = PWM Gen CH3 -> PC2
-    - Channel4 = PWM Gen CH4 -> PC3
+    - Channel1 = PWM Gen CH1 = Front Right Wheel -> PC0 -> A5
+    - Channel2 = PWM Gen CH2 = Front Left Wheel -> PC1 -> A4
+    - Channel3 = PWM Gen CH3 = Back Right Wheel -> PC2 -> Header on Left edge across A4
+    - Channel4 = PWM Gen CH4 = Back Left Wheel -> PC3 -> Header on Left edge across A5
 
 ## EXTIS(Used for HALL EFFECT)
-    - PB10  = Front Left Wheel
-    - PB11 = Front Right Wheel
-    - PB0 = Back Left Wheel
-    - PA5 = Back Right Wheel
+    - PB10  = Front Right Wheel -> D6
+    - PB11 = Front Left Wheel -> Header on Right edge across D10
+    - PB0 = Back Right Wheel -> A3
+    - PA5 = Back Left Wheel -> D13
 
 ## TIM3
     - Prescaler = 7200 - 1

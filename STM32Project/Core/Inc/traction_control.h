@@ -14,4 +14,6 @@ void determineSlippage();
 float calculateAverage(size_t current);
 void linearTraction(int currCCR);
 float get_duty_cycle(int passedCCR);
+float performPID(PID_controller targetMotor, float targetRPM);
+
 #endif

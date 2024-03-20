@@ -39,7 +39,6 @@ void transmission_shift() {
         else if (THROTTLE_INPUT) { //take user input and modify it as necessary
           THROTTLE_INPUT = accel_map(ACC_THROTTLE);
           send_input_to_all_motors(THROTTLE_INPUT);
-          determineSlippage();
         }
     }
 }
@@ -59,6 +58,7 @@ void driver() {
     }
     if (L1) {
         traction_toggle_lock = 0;
+        reset_PID_controllers(LAND_CONTROLLERS,4);
     }
 
     // Toggle if the vehicle is on land or not
@@ -66,6 +66,7 @@ void driver() {
         ON_LAND = !ON_LAND;
         printf("Land toggle switched from %s to %s\n", ON_LAND ? "false" : "true", ON_LAND ? "true" : "false");
         land_toggle_lock = 1;
+        reset_PID_controllers(LAND_CONTROLLERS,4);
     }
     if (CROSS) {
         land_toggle_lock = 0;
