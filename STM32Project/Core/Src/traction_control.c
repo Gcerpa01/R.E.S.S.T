@@ -49,15 +49,25 @@ float calculateAverageRPM(size_t current){
     return temp/(sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]) - 1);
 }
 
-
+/*
+finds the CCR and maps the value to a value from 0 to 180
+*/
+float calcTurnAngle(int controllerInput){
+    int vehicle_input = steer_map(controllerInput);
+    int angle = ((CCR_FOR_STEERING_MAX - CCR_FOR_STEERING_MIN) * (SERVO_ANGLE_MAX - SERVO_ANGLE_MIN) /
+                (CCR_FOR_STEERING_MAX + CCR_FOR_STEERING_MIN)) + SERVO_ANGLE_MIN;
+    float turnAngle = (tan(angle) * 180) / 3.14;
+    
+    return turnAngle;
+}
 /**
  * @abstract: Determines which wheels are slipping and which wheels have traction
  * 
  * 
  */
 void determineSlippage(){
+    float maxVal = MIN_RPM_VALUE;
     if(CURRENT_STEERING == NEUTRAL){
-        float maxVal = MIN_RPM_VALUE;
         //Compare each wheels RPM to the average of all the others
         for(size_t i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
             float averageRPM = calculateAverageRPM(i);
@@ -79,6 +89,46 @@ void determineSlippage(){
         // printf("Wheel with the worst slippage is: %d\r\n", WHEEL);
         linearTraction(THROTTLE_INPUT);
     }   
+    else if(CURRENT_STEERING == RIGHT){
+        int inside_rpmA = RPM_VALUES[1];    //front left
+        int inside_rpmB = RPM_VALUES[4];    //back right
+
+        int outisde_rpmA = RPM_VALUES[2];   //front right
+        int outside_rpmB = RPM_VALUES[3];   //back left
+
+        float turn = WHEEL_BASE /calcTurnAngle(JOYSTICK);
+        float outterRadius = turn + WHEEL_BASE/2;
+        float innerRadius = turn - WHEEL_BASE/2;
+
+        float threshMax = (outterRadius/innerRadius) * (1 + STEERING_THRESHOLD);
+        float threshMin = (outterRadius/innerRadius) * (1 - STEERING_THRESHOLD);
+        for(int i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
+            if(RPM_VALUES[i] > threshMax || RPM_VALUES[i] < threshMin){
+                printf("Slippage Detected: Wheel %d\r\n", i);
+            }
+        }
+
+    }
+    else if(CURRENT_STEERING == LEFT){
+        int inside_rpmA = RPM_VALUES[2];    //front right
+        int inside_rpmB = RPM_VALUES[3];    //back left
+
+        int outisde_rpmA = RPM_VALUES[1];   //front left
+        int outside_rpmB = RPM_VALUES[4];   //back right
+        
+        float turn = WHEEL_BASE /calcTurnAngle(JOYSTICK);
+        float outterRadius = turn + WHEEL_BASE/2;
+        float innerRadius = turn - WHEEL_BASE/2;
+
+        float threshMax = (outterRadius/innerRadius) * (1 + STEERING_THRESHOLD);
+        float threshMin = (outterRadius/innerRadius) * (1 - STEERING_THRESHOLD);
+        
+        for(int i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
+            if(RPM_VALUES[i] > threshMax || RPM_VALUES[i] < threshMin){
+                printf("Slippage Detected: Wheel %d\r\n", i);
+            }
+        }
+    }
 }
 
 

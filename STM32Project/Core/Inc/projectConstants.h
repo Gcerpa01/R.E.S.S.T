@@ -4,6 +4,7 @@
 #include <main.h>
 #include <stdio.h>
 #include "basic_helpers.h"
+#include <math.h>
 
 //Values needed for controlling steering 
 #define JOYSTICK_MIN -255
@@ -11,6 +12,9 @@
 #define CCR_FOR_STEERING_MIN 1
 #define CCR_FOR_STEERING_MAX 90
 #define STEERING_THRESHOLD 0.01
+#define WHEEL_BASE 7 //defined in inches (0.583ft)
+#define SERVO_ANGLE_MAX 180
+#define SERVO_ANGLE_MIN 0
 
 //Values needed for accellerating motors
 #define ACCEL_TRIGGER_MIN 0
