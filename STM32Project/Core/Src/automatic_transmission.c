@@ -11,34 +11,34 @@ void transmission_shift() {
     //Send received value to all motors when no traction control or on water
     if (!TRACTION_CONTROL || !ON_LAND){
         if (BRAKE_THROTTLE) {
-          THROTTLE_INPUT = brake_map(BRAKE_THROTTLE);
-          send_input_to_all_motors(THROTTLE_INPUT);
+          THROTTLE_INPUT = land_brake_map(BRAKE_THROTTLE);
+          send_input_to_all_land_motors(THROTTLE_INPUT);
         }
         else if (!SQUARE) {
-          THROTTLE_INPUT = BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
-          send_input_to_all_motors(BRAKING_CCR_FOR_DUTY_CYCLE_MIN);
+          THROTTLE_INPUT = LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
+          send_input_to_all_land_motors(LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MIN);
         }
         else if (!TRIANGLE) {
-          THROTTLE_INPUT = 110;
-          send_input_to_all_motors(110);
+          THROTTLE_INPUT = LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX + (LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX - LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX) * LAND_ACCEL_TRIANGLE_PERCENTAGE;
+          send_input_to_all_land_motors(THROTTLE_INPUT);
         }
         else if (!CIRCLE) {
-        	THROTTLE_INPUT = ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
-        	send_input_to_all_motors(ACCEL_CCR_FOR_DUTY_CYCLE_MAX);
+        	THROTTLE_INPUT = LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
+        	send_input_to_all_land_motors(LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX);
         }
         else {
-          THROTTLE_INPUT = accel_map(ACC_THROTTLE);
-          send_input_to_all_motors(THROTTLE_INPUT);
+          THROTTLE_INPUT = land_accel_map(ACC_THROTTLE);
+          send_input_to_all_land_motors(THROTTLE_INPUT);
         }
     }
     else if (TRACTION_CONTROL && ON_LAND){
         if(BRAKE_THROTTLE) { //Kill throttle and traction control for braking
-          THROTTLE_INPUT = brake_map(BRAKE_THROTTLE);
-          send_input_to_all_motors(THROTTLE_INPUT);
+          THROTTLE_INPUT = land_brake_map(BRAKE_THROTTLE);
+          send_input_to_all_land_motors(THROTTLE_INPUT);
         }
         else if (THROTTLE_INPUT) { //take user input and modify it as necessary
-          THROTTLE_INPUT = accel_map(ACC_THROTTLE);
-          send_input_to_all_motors(THROTTLE_INPUT);
+          THROTTLE_INPUT = land_accel_map(ACC_THROTTLE);
+          send_input_to_all_land_motors(THROTTLE_INPUT);
         }
     }
 }

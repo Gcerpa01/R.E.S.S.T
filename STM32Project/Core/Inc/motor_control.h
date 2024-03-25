@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "traction_control.h"
 
-void send_input_to_all_motors(int passedCCR);
-void send_to_motor(int passedCCR, int motor);
+void send_input_to_all_land_motors(int passedCCR);
+void send_to_land_motor(int passedCCR, int motor);
 
 #endif

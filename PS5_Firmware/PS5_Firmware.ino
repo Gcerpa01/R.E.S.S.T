@@ -25,11 +25,12 @@ void loop() {
     int Square = ps5.Square() ? 0 : 1;
     int Triangle = ps5.Triangle() ? 0 : 1;
     int L1Value = ps5.L1() ? 0 : 1;
+    int RStrickYValue = ps5.RStickY();
 
     // Format the data string
     char dataString[30];
 
-    int formattedLength = snprintf(dataString, sizeof(dataString), "%d:%d:%d:%d:%d:%d:%d:%d", R2Value, L2Value, LStickXValue, Cross, Circle, Square, Triangle, L1Value);
+    int formattedLength = snprintf(dataString, sizeof(dataString), "%d:%d:%d:%d:%d:%d:%d:%d:%d", R2Value, L2Value, LStickXValue, Cross, Circle, Square, Triangle, L1Value,RStrickYValue);
 
     // Fill remaining characters with ':'
     for (int i = formattedLength; i < sizeof(dataString) - 1; i++) {

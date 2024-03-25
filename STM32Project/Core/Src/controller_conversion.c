@@ -8,10 +8,10 @@
  * @returns: A float value to be used as to control the motors
  *  
  */
-int accel_map(int controllerInput) {
+int land_accel_map(int controllerInput) {
     int newCCR = (int)(((float)(controllerInput - ACCEL_TRIGGER_MIN) / 
                     (float)(ACCEL_TRIGGER_MAX - ACCEL_TRIGGER_MIN)) * 
-                    (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN)) + ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
+                    (LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX - LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MIN)) + LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
     return newCCR;
 }
 
@@ -22,7 +22,7 @@ int accel_map(int controllerInput) {
  * @returns: A float value to be used as to control the servo motors
  *  
  */
-int steer_map(int controllerInput){
+int land_steer_map(int controllerInput){
     int newCCR = (int)(((float)(controllerInput - JOYSTICK_MIN) /
                     (float)(CCR_FOR_STEERING_MAX - CCR_FOR_STEERING_MIN))*
                     (JOYSTICK_MAX - JOYSTICK_MIN)) + CCR_FOR_STEERING_MIN;
@@ -36,10 +36,10 @@ int steer_map(int controllerInput){
  * @returns: A float value to be used as to control the motors
  *  
  */
-int brake_map(int controllerInput) {
-    float newCCR = (float)(BRAKING_CCR_FOR_DUTY_CYCLE_MAX - BRAKING_CCR_FOR_DUTY_CYCLE_MIN) * 
+int land_brake_map(int controllerInput) {
+    float newCCR = (float)(LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX - LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MIN) * 
                    ((float)(BRAKE_TRIGGER_MAX - controllerInput) / 
-                   (float)(BRAKE_TRIGGER_MAX - BRAKE_TRIGGER_MIN)) + BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
+                   (float)(BRAKE_TRIGGER_MAX - BRAKE_TRIGGER_MIN)) + LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
 
     return (int)newCCR;
 }
@@ -49,8 +49,8 @@ int brake_map(int controllerInput) {
  * @param calculatedValue: the value received from the controller
  *  
  */
-void determine_steering_direction(float calculatedValue){
-    float baseline = (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN) / 2;
+void determine_land_steering_direction(float calculatedValue){
+    float baseline = (LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX - LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MIN) / 2;
     if (calculatedValue < baseline - baseline*STEERING_THRESHOLD){
         CURRENT_STEERING = LEFT;
         INSIDE_WHEELS = make_tuple(LAND_CONTROLLERS[1], LAND_CONTROLLERS[2]);

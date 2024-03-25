@@ -5,8 +5,8 @@
 #include "projectConstants.h"
 #include "basic_helpers.h"
 
-int accel_map(int controllerInput);
-int steer_map(int controllerInput);
-int brake_map(int controllerInput);
-void determine_steering_direction(float calculatedValue);
+int land_accel_map(int controllerInput);
+int land_steer_map(int controllerInput);
+int land_brake_map(int controllerInput);
+void determine_land_steering_direction(float calculatedValue);
 #endif

@@ -9,8 +9,8 @@ Stack *WHEELS_WITHOUT_TRACTION;
  * @returns: the Duty Cycle being sent
  *  
  */
-float get_duty_cycle(int passedCCR){
-    return passedCCR * 100.0 / 1440.0;
+float get_duty_cycle(int passedCCR, int period){
+    return passedCCR * 100.0 / (period + 1);
 }
 
 /**
@@ -118,12 +118,12 @@ void linearTraction(int currCCR){
         int targetCCR =  currCCR + controlCCR;
 
         // Ensure duty cycle is within bounds
-        targetCCR = (targetCCR < ACCEL_CCR_FOR_DUTY_CYCLE_MIN) ? ACCEL_CCR_FOR_DUTY_CYCLE_MIN : targetCCR;
-        targetCCR = (targetCCR > ACCEL_CCR_FOR_DUTY_CYCLE_MAX) ? ACCEL_CCR_FOR_DUTY_CYCLE_MAX : targetCCR;
+        targetCCR = (targetCCR < LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MIN) ? LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MIN : targetCCR;
+        targetCCR = (targetCCR > LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX) ? LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX : targetCCR;
 
-//        printf("The current CCR for Wheel %d is: %d, changing it to: %d\r\n", pop_val.wheel_position, currCCR, targetCCR);
-//         printf("The current Duty Cycle for Wheel %d is: %.2f, changing it to: %.2f\r\n", pop_val.wheel_position, get_duty_cycle(currCCR), get_duty_cycle(targetCCR));
-		send_to_motor(pop_val.wheel_position,targetCCR);
+        // printf("The current CCR for Wheel %d is: %d, changing it to: %d\r\n", pop_val.wheel_position, currCCR, targetCCR);
+        // printf("The current Duty Cycle for Wheel %d is: %.2f, changing it to: %.2f\r\n", pop_val.wheel_position, get_duty_cycle(currCCR,LAND_MOTOR_PERIOD), get_duty_cycle(targetCCR,LAND_MOTOR_PERIOD));
+		send_to_land_motor(pop_val.wheel_position,targetCCR);
 	}
 }
 

@@ -36,7 +36,7 @@ UART_HandleTypeDef huart2; //used to print to console
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-int CONTROLLER_VALUES[8] = {0, 0, 0, 1, 1, 1, 1, 1};
+int CONTROLLER_VALUES[9] = {0, 0, 0, 1, 1, 1, 1, 1, 0};
 int CONTROLLER_POSITIONS[4] = {FRONT_RIGHT, FRONT_LEFT, BACK_RIGHT, BACK_LEFT};
 float KP_VALUES[4] = {1.0, 1.0, 1.0, 1.0};
 float KI_VALUES[4] = {0.1, 0.1, 0.1, 0.1};
@@ -49,12 +49,13 @@ bool TRACTION_SEMAPHORE = false;
 bool ON_LAND = true;
 int THROTTLE_INPUT = 0;
 int JOYSTICK_INPUT = 0;
-int USED_PRESCALER = FIFTY_HZ_PRESCALER;
-int USED_PERIOD = FITY_HZ_PERIOD;
-int BRAKING_CCR_FOR_DUTY_CYCLE_MIN = FIFTY_HZ_BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
-int BRAKING_CCR_FOR_DUTY_CYCLE_MAX = FIFTY_HZ_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
-int ACCEL_CCR_FOR_DUTY_CYCLE_MIN = FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
-int ACCEL_CCR_FOR_DUTY_CYCLE_MAX = FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
+int LAND_MOTOR_PRESCALER = FIFTY_HZ_PRESCALER;
+int LAND_MOTOR_PERIOD = FITY_HZ_PERIOD;
+int LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MIN = FIFTY_HZ_BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
+int LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX = FIFTY_HZ_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+int LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MIN = FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
+int LAND_ACCEL_CCR_FOR_DUTY_CYCLE_MAX = FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
+float LAND_ACCEL_TRIANGLE_PERCENTAGE = 0.10;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -156,10 +157,10 @@ int main(void)
   HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
   
   //Initialize all to neutral
-  TIM1 -> CCR1 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
-  TIM1 -> CCR2 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
-  TIM1 -> CCR3 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
-  TIM1 -> CCR4 = BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR1 = LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR2 = LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR3 = LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+  TIM1 -> CCR4 = LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -173,7 +174,7 @@ int main(void)
   printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
   printControllerValues();
   printf("The following CCR is being sent to all channels: %d\n", throttle_input);
-  printf("The following Duty Cycle is being sent to all channels: %f\n", get_duty_cycle(throttle_input));
+  printf("The following Duty Cycle is being sent to all channels: %f\n", get_duty_cycle(throttle_input, LAND_MOTOR_PERIOD));
 */
 
   /* USER CODE END 2 */
@@ -319,9 +320,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = USED_PRESCALER;
+  htim1.Init.Prescaler = LAND_MOTOR_PRESCALER;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = USED_PERIOD;
+  htim1.Init.Period = LAND_MOTOR_PERIOD;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
