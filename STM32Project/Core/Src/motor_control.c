@@ -7,7 +7,7 @@
  * 
  */
 void send_input_to_all_motors(int passedCCR){
-	// printf("The following Duty Cycle is being sent to all channels: %.2f\r\n", get_duty_cycle(passedCCR));
+	//  printf("The following Duty Cycle is being sent to all channels: %.2f\r\n", get_duty_cycle(passedCCR));
 	// printf("The following CCR is being sent to all channels: %d\r\n", passedCCR);
     TIM1->CCR1 = passedCCR;
     TIM1->CCR2 = passedCCR;

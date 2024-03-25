@@ -7,12 +7,12 @@ HardwareSerial stm32Serial(1);
 void setup() {
   stm32Serial.begin(9600, SERIAL_8N1, rxPin, txPin);
   Serial.begin(9600);
-  ps5.begin("88:03:4c:ef:be:54"); //replace with MAC address of your controller
+  ps5.begin("88:03:4c:b9:b1:c9"); //replace with MAC address of your controller
   Serial.println("Ready.");
 }
 
 void loop() {
-  while (ps5.isConnected() == true) {
+  while (ps5.isConnected() == true) { 
     // Check if the controller buttons are pressed
     // Omitted for brevity
 

@@ -24,14 +24,21 @@ void initialize_traction_control() {
 }
 
 /**
- * @abstract: Calculates the RPM for each wheel and save it in memory
- * 
+ * @abstract: Calculates the RPM for each wheel and save it in memory.
+ *            Also resets Hall Effect Count for future calculation.
  * 
  */
 void calculateRPM(){
-    for(size_t i = 0; i < sizeof(HALL_EFFECT_SENSORS)/sizeof(HALL_EFFECT_SENSORS[0]); i++){
-        RPM_VALUES[i] = (HALL_EFFECT_SENSORS[i] / POLES) * 60;
+    for(size_t i = 0; i < sizeof(LAND_CONTROLLERS)/sizeof(LAND_CONTROLLERS[0]); i++){
+        LAND_CONTROLLERS[i].rpm = (LAND_CONTROLLERS[i].hall_effect_count * POLES) * 60;
+        LAND_CONTROLLERS[i].hall_effect_count = 0;
     }
+    // printf("\r-----RPM Values-----\r\n");
+	// printf("Front Left Wheel: %f \r\n", RPM_VALUES[0]);
+	// printf("Front Right Wheel: %f \r\n", RPM_VALUES[1]);
+	// printf("Back Left Wheel: %f \r\n", RPM_VALUES[2]);
+	// printf("Back Right Wheel: %f \r\n", RPM_VALUES[3]);
+	// printf("-----RPM Values----- \r\n");
 }
 
 
@@ -42,11 +49,11 @@ void calculateRPM(){
  */
 float calculateAverageRPM(size_t current){
     float temp = 0;
-    for(size_t j = 0; j < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); j++){
+    for(size_t j = 0; j < sizeof(LAND_CONTROLLERS)/sizeof(LAND_CONTROLLERS[0]); j++){
         if(current == j) continue;
-        temp+= RPM_VALUES[j];
+        temp+= LAND_CONTROLLERS[j].rpm;
     }
-    return temp/(sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]) - 1);
+    return temp/(sizeof(LAND_CONTROLLERS)/sizeof(LAND_CONTROLLERS[0]) - 1);
 }
 
 
@@ -56,25 +63,26 @@ float calculateAverageRPM(size_t current){
  * 
  */
 void determineSlippage(){
+//	printf("Determine Slippage\r\n");
     if(CURRENT_STEERING == NEUTRAL){
         float maxVal = MIN_RPM_VALUE;
         //Compare each wheels RPM to the average of all the others
-        for(size_t i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
+        for(size_t i = 0; i < sizeof(LAND_CONTROLLERS)/sizeof(LAND_CONTROLLERS[0]); i++){
             float averageRPM = calculateAverageRPM(i);
 //            printf("The averageRPM for all other wheels is: %.2f, Wheel[i] RPM is: %.2f\r\n",averageRPM, RPM_VALUES[i]);
             float threshMax = averageRPM * (1 + LINEAR_TRACTION_THRESHOLD);
 //            printf("The threshold max is: %.2f\r\n", threshMax);
             //Check if its above or below the threshold
-            if(RPM_VALUES[i] >= threshMax){
+            if(LAND_CONTROLLERS[i].rpm >= threshMax){
                 //Track the wheel with the worst traction
-                if(RPM_VALUES[i] > maxVal){
-                    maxVal = RPM_VALUES[i];
+                if(LAND_CONTROLLERS[i].rpm > maxVal){
+                    maxVal = LAND_CONTROLLERS[i].rpm;
                     WHEEL = i;
                 }
                 // printf("Slippage Detected: Wheel %d\r\n", i);
-                push(WHEELS_WITHOUT_TRACTION,i);
+                push(WHEELS_WITHOUT_TRACTION,LAND_CONTROLLERS[i]);
             }
-            else{ push(WHEELS_WITH_TRACTION,i); }
+            else{ push(WHEELS_WITH_TRACTION,LAND_CONTROLLERS[i]); }
         }
         // printf("Wheel with the worst slippage is: %d\r\n", WHEEL);
         linearTraction(THROTTLE_INPUT);
@@ -89,13 +97,14 @@ void determineSlippage(){
  * 
  */
 void linearTraction(int currCCR){
+//	printf("Doing Linear Traction\r\n");
 	//get average rpm of the wheels with traction
-	int pop_val = 0;
+	PID_controller pop_val;
 	float average = 0;
 	int og_size = get_size(WHEELS_WITH_TRACTION);
 	while (!is_empty(WHEELS_WITH_TRACTION)){
 		pop(WHEELS_WITH_TRACTION, &pop_val);
-		float rpm = RPM_VALUES[pop_val];
+		float rpm = pop_val.rpm;
 		average += rpm;
 	}
 	average /= og_size;
@@ -103,16 +112,37 @@ void linearTraction(int currCCR){
     //Calculate new CCR
 	while(!is_empty(WHEELS_WITHOUT_TRACTION)){
 		pop(WHEELS_WITHOUT_TRACTION, &pop_val);
-        //Calculate difference in rpm 
-		float reduction = RPM_VALUES[pop_val] - average;
-        //Calculate target based on current input 
-		int target = currCCR - (reduction/RPM_VALUES[pop_val]) * (ACCEL_CCR_FOR_DUTY_CYCLE_MAX - ACCEL_CCR_FOR_DUTY_CYCLE_MIN);
-        //Stay within boundaries
-        target = (target < ACCEL_CCR_FOR_DUTY_CYCLE_MIN) ? ACCEL_CCR_FOR_DUTY_CYCLE_MIN : target;
-        target = (target > ACCEL_CCR_FOR_DUTY_CYCLE_MAX) ? ACCEL_CCR_FOR_DUTY_CYCLE_MAX : target;
+        
+        float controlCCR = performPID(pop_val, average);
+        
+        int targetCCR =  currCCR + controlCCR;
 
-        // printf("The current CCR for Wheel %d is: %d, changing it to: %d\r\n", pop_val, currCCR, target);
-        // printf("The current Duty Cycle for Wheel %d is: %.2f, changing it to: %.2f\r\n", pop_val, get_duty_cycle(currCCR), get_duty_cycle(target));
-		send_to_motor(pop_val,target);
+        // Ensure duty cycle is within bounds
+        targetCCR = (targetCCR < ACCEL_CCR_FOR_DUTY_CYCLE_MIN) ? ACCEL_CCR_FOR_DUTY_CYCLE_MIN : targetCCR;
+        targetCCR = (targetCCR > ACCEL_CCR_FOR_DUTY_CYCLE_MAX) ? ACCEL_CCR_FOR_DUTY_CYCLE_MAX : targetCCR;
+
+//        printf("The current CCR for Wheel %d is: %d, changing it to: %d\r\n", pop_val.wheel_position, currCCR, targetCCR);
+//         printf("The current Duty Cycle for Wheel %d is: %.2f, changing it to: %.2f\r\n", pop_val.wheel_position, get_duty_cycle(currCCR), get_duty_cycle(targetCCR));
+		send_to_motor(pop_val.wheel_position,targetCCR);
 	}
+}
+
+
+float performPID(PID_controller targetMotor, float targetRPM){
+//	printf("Performing PID \r\n");
+    //Calculate difference in rpm 
+    float error = targetMotor.rpm - targetRPM;
+    
+    //calculate Present error (Proportional)
+    float proportional_term = targetMotor.Kp * error;
+
+    //calculate past error (Integral)
+    targetMotor.error_sum += error; //keep run of error
+    float integral_term = targetMotor.Ki * targetMotor.error_sum;
+
+    //calculate future error (Derivative)
+    float derivative_term = targetMotor.Kd * (error - targetMotor.prev_error);
+    targetMotor.prev_error = error;
+
+    return proportional_term + integral_term + derivative_term;
 }

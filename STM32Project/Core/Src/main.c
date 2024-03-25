@@ -36,16 +36,25 @@ UART_HandleTypeDef huart2; //used to print to console
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-int HALL_EFFECT_SENSORS[4] = {0,0,0,0};
-float RPM_VALUES[4] = {0,0,0,0};
 int CONTROLLER_VALUES[8] = {0, 0, 0, 1, 1, 1, 1, 1};
+int CONTROLLER_POSITIONS[4] = {FRONT_RIGHT, FRONT_LEFT, BACK_RIGHT, BACK_LEFT};
+float KP_VALUES[4] = {1.0, 1.0, 1.0, 1.0};
+float KI_VALUES[4] = {0.1, 0.1, 0.1, 0.1};
+float KD_VALUES[4] = {0.05, 0.05, 0.05, 0.05};
+PID_controller LAND_CONTROLLERS[4];
 enum STEER CURRENT_STEERING = NEUTRAL;
 enum MOTORS WHEEL = NONE;
 bool TRACTION_CONTROL = false;
+bool TRACTION_SEMAPHORE = false;
 bool ON_LAND = true;
 int THROTTLE_INPUT = 0;
 int JOYSTICK_INPUT = 0;
-
+int USED_PRESCALER = FIFTY_HZ_PRESCALER;
+int USED_PERIOD = FITY_HZ_PERIOD;
+int BRAKING_CCR_FOR_DUTY_CYCLE_MIN = FIFTY_HZ_BRAKING_CCR_FOR_DUTY_CYCLE_MIN;
+int BRAKING_CCR_FOR_DUTY_CYCLE_MAX = FIFTY_HZ_BRAKING_CCR_FOR_DUTY_CYCLE_MAX;
+int ACCEL_CCR_FOR_DUTY_CYCLE_MIN = FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MIN;
+int ACCEL_CCR_FOR_DUTY_CYCLE_MAX = FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MAX;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,6 +74,7 @@ int JOYSTICK_INPUT = 0;
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -79,6 +89,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -108,35 +119,6 @@ void printControllerValues() {
 }
 
 ////////////////////////////
-////////////////////////////
-
-
-typedef struct{
-	double kp;
-	double ki;
-	double kd;
-
-	double setpoint;
-
-	double prevError;
-	double integral;
-
-	double outputMin;
-	double outputMax;
-}PID_controller;
-
-void PID_init(PID_controller* pid, double kp, double ki, double kd, double max, double min){
-	pid->kp = kp;	//tune these constants after testing
-	pid->ki = ki;
-	pid->kd = kd;
-
-	pid-> outputMin = min;
-	pid-> outputMax = max;
-
-	pid->setpoint = 0;
-	pid->prevError = 0;
-	pid->integral = 0;
-}
 /* USER CODE END 0 */
 
 /**
@@ -155,7 +137,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -170,6 +151,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT (&huart1, UART1_rxBuffer, 30);
   
@@ -183,8 +165,9 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+  HAL_TIM_Base_Start_IT(&htim3);
 
-
+  init_PID_controllers(KP_VALUES, KI_VALUES, KD_VALUES, CONTROLLER_POSITIONS, LAND_CONTROLLERS, 4);
   initialize_traction_control();
 /* HELPFUL PRINT STATEMENTS
   printBuffer(UART1_rxBuffer, sizeof(UART1_rxBuffer));
@@ -208,6 +191,9 @@ int main(void)
 /// DO NOT DELETE NEEDED FOR RX ////
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+  //Ignore controller input during calculation of RPM and traction control
+  if (TRACTION_SEMAPHORE) return;
+//  printf("Receiving data\r\n");
   HAL_UART_Transmit(&huart1, UART1_rxBuffer, 30, 100);
   HAL_UART_Receive_IT(&huart1, UART1_rxBuffer, 30);
 
@@ -224,6 +210,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
 
 }
+////////////////////////////////////
+
 
 /**
   * @brief System Clock Configuration
@@ -264,10 +252,11 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
-                              |RCC_PERIPHCLK_TIM1;
+                              |RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_TIM34;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
+  PeriphClkInit.Tim34ClockSelection = RCC_TIM34CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -330,9 +319,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 999;
+  htim1.Init.Prescaler = USED_PRESCALER;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 1439;
+  htim1.Init.Period = USED_PERIOD;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -402,6 +391,50 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 7200-1;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 9999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -453,27 +486,71 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pin : PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB10 PB11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_10|GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(GPIO_Pin);
+  /* NOTE: This function Should not be modified, when the callback is needed,
+           the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+
+  // Counts up on whenever rising edge hall effect occurs
+  if (TRACTION_CONTROL){
+    if(GPIO_Pin == GPIO_PIN_10) LAND_CONTROLLERS[0].hall_effect_count++;
+    else if (GPIO_Pin == GPIO_PIN_11) LAND_CONTROLLERS[1].hall_effect_count++;
+    else if (GPIO_Pin == GPIO_PIN_0) LAND_CONTROLLERS[2].hall_effect_count++;
+    else if (GPIO_Pin == GPIO_PIN_5) LAND_CONTROLLERS[3].hall_effect_count++;
+  }
+}
+
+
+// Trigger RPM Calculation every second
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if(TRACTION_CONTROL && ON_LAND && htim == &htim3){
+	  TRACTION_SEMAPHORE = true;
+//    printf("RPM: \r\n");
+    calculateRPM();
+    determineSlippage();
+    TRACTION_SEMAPHORE = false;
+  }
+}
+
+
 
 /* USER CODE END 4 */
 
