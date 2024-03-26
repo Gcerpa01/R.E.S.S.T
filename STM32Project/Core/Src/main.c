@@ -111,34 +111,6 @@ void printControllerValues() {
 
 ////////////////////////////
 ////////////////////////////
-
-/*
-typedef struct{
-	double kp;
-	double ki;
-	double kd;
-
-	double setpoint;
-
-	double prevError;
-	double integral;
-
-	double outputMin;
-	double outputMax;
-}PID_controller;
-
-void PID_init(PID_controller* pid, double kp, double ki, double kd, double max, double min){
-	pid->kp = kp;	//tune these constants after testing
-	pid->ki = ki;
-	pid->kd = kd;
-
-	pid-> outputMin = min;
-	pid-> outputMax = max;
-
-	pid->setpoint = 0;
-	pid->prevError = 0;
-	pid->integral = 0;
-}*/
 /* USER CODE END 0 */
 
 /**
