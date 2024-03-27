@@ -15,6 +15,9 @@ void send_input_to_all_motors(int passedCCR){
     TIM1->CCR4 = passedCCR;
 }
 
+void send_input_to_servo(int passedCCR){
+	TIM2->CCR1 = passedCCR;
+}
 /**
  * @abstract: Sends a given value to all motors
  * @param passedCCR: the value being sent to simulate a duty cycle
@@ -39,6 +42,8 @@ void send_to_motor(int passedCCR, int motor){
 			TIM1->CCR4 = passedCCR;
 			// printf("Duty Cycle of: %.2f is being sent to channel: %d\n", get_duty_cycle(passedCCR), (motor+1));
 			break;
+		case 4:
+			TIM2->CCR1 = passedCCR;
 		default:
 			// printf("Invalid wheel number or no wheel is slipping\n");
 			break;

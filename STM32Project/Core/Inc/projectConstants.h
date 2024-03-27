@@ -14,7 +14,6 @@
 #define FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MIN 108
 #define FIFTY_HZ_ACCEL_CCR_FOR_DUTY_CYCLE_MAX 144
 
-
 /* EIGHT KHZ Values */
 #define EIGHT_KHZ_PRESCALER 10
 #define EIGHT_KHZ_PERIOD  7200
@@ -74,9 +73,13 @@
 //Values needed for controlling steering 
 #define JOYSTICK_MIN -255
 #define JOYSTICK_MAX 255
-#define CCR_FOR_STEERING_MIN 1
-#define CCR_FOR_STEERING_MAX 90
+#define CCR_FOR_STEERING_MIN 72
+#define CCR_FOR_STEERING_MAX 144
 #define STEERING_THRESHOLD 0.01
+
+#define WHEELBASE 7 //inches change to vehicle specs
+#define SERVO_ANGLE_MAX 90
+#define SERVO_ANGLE_MIN 0
 
 //Values needed for accellerating motors
 extern int LAND_BRAKING_CCR_FOR_DUTY_CYCLE_MIN;

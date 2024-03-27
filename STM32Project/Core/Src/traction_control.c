@@ -96,18 +96,24 @@ void determineSlippage(){
         int outisde_rpmA = RPM_VALUES[2];   //front right
         int outside_rpmB = RPM_VALUES[3];   //back left
 
-        float turn = WHEEL_BASE /calcTurnAngle(JOYSTICK);
-        float outterRadius = turn + WHEEL_BASE/2;
-        float innerRadius = turn - WHEEL_BASE/2;
+        float turn = WHEELBASE /calcTurnAngle(JOYSTICK);
+        float outterRadius = turn + WHEELBASE/2;
+        float innerRadius = turn - WHEELBASE/2;
 
         float threshMax = (outterRadius/innerRadius) * (1 + STEERING_THRESHOLD);
         float threshMin = (outterRadius/innerRadius) * (1 - STEERING_THRESHOLD);
         for(int i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
-            if(RPM_VALUES[i] > threshMax || RPM_VALUES[i] < threshMin){
-                printf("Slippage Detected: Wheel %d\r\n", i);
+            if(RPM_VALUES[i] > threshMax){
+                if(RPM_VALUES[i] > maxVal){
+                    maxVal = RPM_VALUES[i];
+                    WHEEL = i;
+                }
+                // printf("Slippage Detected: Wheel %d\r\n", i);
+                push(WHEELS_WITHOUT_TRACTION,i);
             }
+            else{ push(WHEELS_WITH_TRACTION,i); }
         }
-
+    linearTraction(THROTTLE_INPUT);
     }
     else if(CURRENT_STEERING == LEFT){
         int inside_rpmA = RPM_VALUES[2];    //front right
@@ -116,17 +122,26 @@ void determineSlippage(){
         int outisde_rpmA = RPM_VALUES[1];   //front left
         int outside_rpmB = RPM_VALUES[4];   //back right
         
-        float turn = WHEEL_BASE /calcTurnAngle(JOYSTICK);
-        float outterRadius = turn + WHEEL_BASE/2;
-        float innerRadius = turn - WHEEL_BASE/2;
+        float turn = WHEELBASE /calcTurnAngle(JOYSTICK);
+        float outterRadius = turn + WHEELBASE/2;
+        float innerRadius = turn - WHEELBASE/2;
 
         float threshMax = (outterRadius/innerRadius) * (1 + STEERING_THRESHOLD);
         float threshMin = (outterRadius/innerRadius) * (1 - STEERING_THRESHOLD);
         
         for(int i = 0; i < sizeof(RPM_VALUES)/sizeof(RPM_VALUES[0]); i++){
-            if(RPM_VALUES[i] > threshMax || RPM_VALUES[i] < threshMin){
-                printf("Slippage Detected: Wheel %d\r\n", i);
+            if(RPM_VALUES[i] > threshMax ){
+                if(RPM_VALUES[i] > threshMax){
+                if(RPM_VALUES[i] > maxVal){
+                    maxVal = RPM_VALUES[i];
+                    WHEEL = i;
+                }
+                // printf("Slippage Detected: Wheel %d\r\n", i);
+                push(WHEELS_WITHOUT_TRACTION,i);
             }
+            else{ push(WHEELS_WITH_TRACTION,i); }
+        }
+    linearTraction(THROTTLE_INPUT);
         }
     }
 }
